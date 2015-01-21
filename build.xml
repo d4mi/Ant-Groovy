@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="ant-scripting">
+    <property file="metalink.properties"/>
+
+    <taskdef resource="org/codehaus/groovy/antlib.xml">
+        <classpath path="lib/groovy-all-1.6.0.jar"/>
+    </taskdef>
+
+    <target name="metalink">
+        <groovy>
+            class Metalink extends org.apache.tools.ant.Task {
+                String _url;
+
+                public void setUrl(String url) {
+                    _url = url;
+                }
+
+                public void execute() {
+                    println "Metalink executed"
+                    println _url;
+                }
+            }
+            project.addTaskDefinition('Meta4', Metalink);
+        </groovy>
+
+        <Meta4 url="www.site.com"/>
+        <Meta4 />
+    </target>
+
+    <target name="build" >
+        <groovy>
+            println "Do nothing"
+        </groovy>
+    </target>
+ </project>
