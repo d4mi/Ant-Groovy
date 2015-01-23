@@ -4,27 +4,76 @@
 
     <taskdef resource="org/codehaus/groovy/antlib.xml">
         <classpath path="lib/groovy-all-1.6.0.jar"/>
+        <classpath path="/usr/share/maven-repo/com/google/guava/guava/15.0/guava-15.0.jar"/>
     </taskdef>
 
     <target name="metalink">
         <groovy>
-            class Metalink extends org.apache.tools.ant.Task {
-                String _url;
+            import org.apache.tools.ant.BuildException;
+            import org.apache.tools.ant.types.FileSet;
+            import org.apache.tools.ant.Task;
+            import groovy.xml.MarkupBuilder;
+            import java.util.Date;
+            import com.google.common.hash.HashCode
+            import com.google.common.hash.HashFunction
+            import com.google.common.hash.Hashing
+            import com.google.common.io.Files
 
+            class Metalink extends org.apache.tools.ant.Task {
+                String _url = properties["server.files.url"];
+                String _file;
+                FileSet _fileSet;
+
+                /* url property */
                 public void setUrl(String url) {
                     _url = url;
                 }
 
-                public void execute() {
+                /* file property */
+                public void setFile(String myFile) {
+                    _file = myFile;
+                }
+
+                /* Support nested 'fileset' element */
+                public void addFileset(FileSet fileSet) {
+                    _fileSet = fileSet;
+                }
+
+                public CreateFile() {                    
+                    new File(_file).withWriter { writer ->
+                        new groovy.xml.MarkupBuilder(writer).mkp.xmlDeclaration(version: "1.0", encoding: "utf-8") {
+                            published(new Date()) 
+                                files {
+                                     _fileSet.each { currentFile ->
+                                        fileItem(name: currentFile.getName() ) {
+                                                size(new File(currentFile.toString()).length());
+                                                hash(type: "md5", Files.hash(new File(currentFile.toString()), Hashing.md5()));
+                                                urlAddress(_url + currentFile.getName());
+                                                language("en");
+                                                version("1.0")
+                                                identity("example")
+                                        }
+                                     }
+                                }
+                        }
+                    }
+                 }
+                
+                public void execute() throws BuildException {
                     println "Metalink executed"
                     println _url;
+                    println "Dir is: " + _fileSet.dir;
+                    println "File is: " + _file;
+
+                    CreateFile();
                 }
             }
             project.addTaskDefinition('Meta4', Metalink);
         </groovy>
 
-        <Meta4 url="www.site.com"/>
-        <Meta4 />
+        <Meta4 url="www.site.com/" file="/home/xxx/Desktop/ant/ant/output.xml">
+            <fileset dir="/home/xxx/Desktop/ant" />
+        </Meta4>
     </target>
 
     <target name="build" >
