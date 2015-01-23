@@ -14,13 +14,14 @@
             import org.apache.tools.ant.Task;
             import groovy.xml.MarkupBuilder;
             import java.util.Date;
+            import java.text.SimpleDateFormat
             import com.google.common.hash.HashCode
             import com.google.common.hash.HashFunction
             import com.google.common.hash.Hashing
             import com.google.common.io.Files
 
             class Metalink extends org.apache.tools.ant.Task {
-                String _url = properties["server.files.url"];
+                String _url;
                 String _file;
                 FileSet _fileSet;
 
@@ -41,8 +42,8 @@
 
                 public CreateFile() {                    
                     new File(_file).withWriter { writer ->
-                        new groovy.xml.MarkupBuilder(writer).mkp.xmlDeclaration(version: "1.0", encoding: "utf-8") {
-                            published(new Date()) 
+                        new groovy.xml.MarkupBuilder(writer).mkp.xml(version: "1.0", encoding: "utf-8") {
+                            published(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(new Date())) 
                                 files {
                                      _fileSet.each { currentFile ->
                                         fileItem(name: currentFile.getName() ) {
@@ -60,8 +61,10 @@
                  }
                 
                 public void execute() throws BuildException {
+                    _url = _url ? _url : project.properties["server.files.url"]; 
+
                     println "Metalink executed"
-                    println _url;
+                    println _url 
                     println "Dir is: " + _fileSet.dir;
                     println "File is: " + _file;
 
@@ -71,8 +74,9 @@
             project.addTaskDefinition('Meta4', Metalink);
         </groovy>
 
-        <Meta4 url="www.site.com/" file="/home/xxx/Desktop/ant/ant/output.xml">
-            <fileset dir="/home/xxx/Desktop/ant" />
+
+        <Meta4 url="www.site.com" file="/home/xxx/Desktop/ant/ant/output.xml">
+            <fileset dir="." />
         </Meta4>
     </target>
 
